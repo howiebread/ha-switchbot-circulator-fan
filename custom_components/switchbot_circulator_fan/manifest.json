@@ -1,0 +1,11 @@
+{
+  "domain": "switchbot_circulator_fan",
+  "name": "SwitchBot Circulator Fan",
+  "codeowners": ["@howiebread"],
+  "config_flow": true,
+  "documentation": "https://github.com/howiebread/ha-switchbot-circulator-fan",
+  "integration_type": "device",
+  "issue_tracker": "https://github.com/howiebread/ha-switchbot-circulator-fan/issues",
+  "requirements": ["PySwitchbot==2.2.0"],
+  "version": "0.1.0"
+}

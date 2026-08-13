@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect a SwitchBot Circulator Fan",
+        "description": "Enter the Bluetooth MAC address of your SwitchBot Battery Circulator Fan.",
+        "data": {
+          "mac": "Bluetooth MAC address"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This fan is already configured."
+    }
+  }
+}
