@@ -12,5 +12,15 @@
     "abort": {
       "already_configured": "This fan is already configured."
     }
+  },
+  "entity": {
+    "switch": {
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      }
+    }
   }
 }

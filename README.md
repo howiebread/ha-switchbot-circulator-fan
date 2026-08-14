@@ -4,8 +4,9 @@ A Home Assistant custom integration for SwitchBot Battery Circulator Fan control
 
 ## Project status
 
-This project is in early development. The initial scaffolding is complete; the
-first planned feature is support for horizontal and vertical oscillation.
+This project is in early development. CF-002 adds the initial horizontal and
+vertical oscillation switches for the Battery Circulator Fan. Hardware
+validation is still required before the first release.
 
 ## Planned support
 
@@ -14,8 +15,9 @@ first planned feature is support for horizontal and vertical oscillation.
 - Future investigation of the fan's night-light feature
 - Regression protection for existing Standing Fan behavior
 
-No device controls are exposed until their PySwitchbot behavior has been
-verified against a physical device.
+The integration communicates directly over Bluetooth using PySwitchbot 2.2.0.
+Your Home Assistant installation therefore needs a Bluetooth adapter or a
+Bluetooth proxy that can reach the fan.
 
 ## Development setup
 

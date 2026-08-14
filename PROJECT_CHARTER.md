@@ -8,5 +8,13 @@ completed.
 
 **CF-002 — Battery Circulator oscillation switches**
 
-Before controls are added, confirm the PySwitchbot 2.2.0 device class, command
-names, state fields, and compatible fan model identifiers against a real device.
+The PySwitchbot 2.2.0 API has been verified in its released source:
+
+- `SwitchbotFan` represents the Battery Circulator Fan.
+- `set_horizontal_oscillation(bool)` controls left/right oscillation.
+- `set_vertical_oscillation(bool)` controls up/down oscillation.
+- `get_horizontal_oscillating_state()` and
+  `get_vertical_oscillating_state()` provide their respective cached states.
+
+The two Home Assistant switches are implemented. Confirm their behavior against
+the physical fan before release.
