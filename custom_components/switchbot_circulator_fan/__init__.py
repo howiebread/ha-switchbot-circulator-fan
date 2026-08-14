@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.components import bluetooth
+from switchbot import SwitchbotFan
 
 from .const import DOMAIN
 
@@ -13,7 +17,17 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBot Circulator Fan from a config entry."""
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    address = entry.data[CONF_MAC]
+    if not (
+        ble_device := bluetooth.async_ble_device_from_address(
+            hass, address, connectable=True
+        )
+    ):
+        raise ConfigEntryNotReady(
+            f"SwitchBot Circulator Fan {address} is not currently reachable by Bluetooth"
+        )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SwitchbotFan(ble_device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
