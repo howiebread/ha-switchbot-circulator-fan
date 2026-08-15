@@ -3,25 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from collections.abc import Awaitable, Callable
 
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from switchbot import SwitchbotFan, SwitchbotOperationError
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import SwitchBotCirculatorFanCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
 class OscillationSwitchDescription(SwitchEntityDescription):
     """Describe one independent oscillation axis."""
 
-    state_getter: Callable[[SwitchbotFan], bool | None]
-    state_setter: Callable[[SwitchbotFan, bool], Awaitable[bool]]
+    axis: str
 
 
 SWITCHES: tuple[OscillationSwitchDescription, ...] = (
@@ -29,15 +28,13 @@ SWITCHES: tuple[OscillationSwitchDescription, ...] = (
         key="horizontal_oscillation",
         translation_key="horizontal_oscillation",
         icon="mdi:arrow-left-right",
-        state_getter=lambda fan: fan.get_horizontal_oscillating_state(),
-        state_setter=lambda fan, state: fan.set_horizontal_oscillation(state),
+        axis="horizontal",
     ),
     OscillationSwitchDescription(
         key="vertical_oscillation",
         translation_key="vertical_oscillation",
         icon="mdi:arrow-up-down",
-        state_getter=lambda fan: fan.get_vertical_oscillating_state(),
-        state_setter=lambda fan, state: fan.set_vertical_oscillation(state),
+        axis="vertical",
     ),
 )
 
@@ -48,13 +45,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Battery Circulator Fan oscillation switches."""
-    fan: SwitchbotFan = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SwitchBotCirculatorFanCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SwitchBotOscillationSwitch(entry, fan, description) for description in SWITCHES
+        SwitchBotOscillationSwitch(entry, coordinator, description)
+        for description in SWITCHES
     )
 
 
-class SwitchBotOscillationSwitch(SwitchEntity):
+class SwitchBotOscillationSwitch(
+    CoordinatorEntity[SwitchBotCirculatorFanCoordinator], SwitchEntity
+):
     """Represent one axis of Battery Circulator Fan oscillation."""
 
     entity_description: OscillationSwitchDescription
@@ -63,12 +63,12 @@ class SwitchBotOscillationSwitch(SwitchEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        fan: SwitchbotFan,
+        coordinator: SwitchBotCirculatorFanCoordinator,
         description: OscillationSwitchDescription,
     ) -> None:
         """Initialize the oscillation switch."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._fan = fan
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
@@ -81,29 +81,16 @@ class SwitchBotOscillationSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether this oscillation axis is active."""
-        return self.entity_description.state_getter(self._fan)
-
-    @property
-    def available(self) -> bool:
-        """Return whether the fan has supplied a state."""
-        return self._fan.get_horizontal_oscillating_state() is not None
+        return self.coordinator.data[self.entity_description.axis]
 
     async def async_turn_on(self, **kwargs: object) -> None:
         """Start oscillation on this entity's axis."""
-        await self._async_set_oscillation(True)
+        await self.coordinator.async_set_oscillation(
+            self.entity_description.axis, True
+        )
 
     async def async_turn_off(self, **kwargs: object) -> None:
         """Stop oscillation on this entity's axis."""
-        await self._async_set_oscillation(False)
-
-    async def async_update(self) -> None:
-        """Fetch the latest state from the fan."""
-        try:
-            await self._fan.update()
-        except SwitchbotOperationError:
-            return
-
-    async def _async_set_oscillation(self, state: bool) -> None:
-        """Set this oscillation axis and refresh Home Assistant state."""
-        await self.entity_description.state_setter(self._fan, state)
-        self.async_write_ha_state()
+        await self.coordinator.async_set_oscillation(
+            self.entity_description.axis, False
+        )
