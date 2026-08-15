@@ -7,5 +7,5 @@
   "integration_type": "device",
   "issue_tracker": "https://github.com/howiebread/ha-switchbot-circulator-fan/issues",
   "requirements": ["PySwitchbot==2.2.0"],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

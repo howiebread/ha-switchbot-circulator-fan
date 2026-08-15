@@ -11,6 +11,7 @@ from homeassistant.components import bluetooth
 from switchbot import SwitchbotFan
 
 from .const import DOMAIN
+from .coordinator import SwitchBotCirculatorFanCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
@@ -27,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"SwitchBot Circulator Fan {address} is not currently reachable by Bluetooth"
         )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SwitchbotFan(ble_device)
+    coordinator = SwitchBotCirculatorFanCoordinator(hass, SwitchbotFan(ble_device))
+    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
