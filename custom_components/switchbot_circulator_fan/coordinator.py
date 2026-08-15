@@ -37,13 +37,20 @@ class SwitchBotCirculatorFanCoordinator(DataUpdateCoordinator[dict[str, bool | N
 
     async def _async_update_data(self) -> dict[str, bool | None]:
         """Fetch a single current state snapshot from the fan."""
+        cached_state = self._state()
         try:
             await self.fan.update()
         except Exception as err:
-            raise UpdateFailed(f"Unable to communicate with the fan: {err}") from err
+            if cached_state["horizontal"] is None and cached_state["vertical"] is None:
+                raise UpdateFailed(
+                    f"Unable to communicate with the fan: {err}"
+                ) from err
+            return cached_state
 
         state = self._state()
         if state["horizontal"] is None and state["vertical"] is None:
+            if cached_state["horizontal"] is not None or cached_state["vertical"] is not None:
+                return cached_state
             raise UpdateFailed("The fan did not return oscillation state")
         return state
 
